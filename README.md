@@ -48,3 +48,11 @@ npm run build
 - Trang `/playlists/:id`: danh sách bài, bỏ bài, tổng thời lượng và **Phát tất cả**.
 - Giao diện sáng/tối bằng `ThemeContext`, lưu lựa chọn trong `localStorage`.
 - Các trang Yêu thích, Playlist và chi tiết Playlist được lazy-load theo route.
+
+## Phần 4 đã hoàn thiện
+
+- 70 test Vitest + React Testing Library, đặt cạnh file nguồn với mô tả tiếng Việt.
+- Test unit cho `formatDuration`, dữ liệu bài hát, playlist reducer, player store và hook `useDebounce`.
+- Test component cho `SongRow`, `PlaylistsPage`, trang playlist, yêu thích, thanh phát nhạc và App.
+- Chạy `npm run coverage` để kiểm tra; ngưỡng tối thiểu 70% lines cho `src/features` và `src/utils`.
+- Kết quả coverage hiện tại: **95.98% lines**; ảnh chụp lưu tại `coverage.png`.
