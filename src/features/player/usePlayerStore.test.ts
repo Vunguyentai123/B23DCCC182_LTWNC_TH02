@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SONGS } from '../../data/songs'
 import { initialPlayerState, usePlayerStore } from './usePlayerStore'
 
@@ -235,5 +235,95 @@ describe('usePlayerStore', () => {
     expect(state.currentIndex).toBe(-1)
     expect(state.isPlaying).toBe(false)
     expect(state.position).toBe(0)
+  })
+
+  it('cycleRepeat chuyển lần lượt off → all → one → off', () => {
+    expect(usePlayerStore.getState().repeatMode).toBe('off')
+
+    usePlayerStore.getState().cycleRepeat()
+    expect(usePlayerStore.getState().repeatMode).toBe('all')
+
+    usePlayerStore.getState().cycleRepeat()
+    expect(usePlayerStore.getState().repeatMode).toBe('one')
+
+    usePlayerStore.getState().cycleRepeat()
+    expect(usePlayerStore.getState().repeatMode).toBe('off')
+  })
+
+  it('next ở bài cuối với chế độ lặp tất cả quay về bài đầu', () => {
+    usePlayerStore.setState({
+      queue: [s1, s2],
+      currentIndex: 1,
+      isPlaying: true,
+      position: 10,
+      repeatMode: 'all',
+    })
+
+    usePlayerStore.getState().next()
+
+    const state = usePlayerStore.getState()
+    expect(state.currentIndex).toBe(0)
+    expect(state.isPlaying).toBe(true)
+    expect(state.position).toBe(0)
+  })
+
+  it('prev ở bài đầu với chế độ lặp tất cả nhảy tới bài cuối', () => {
+    usePlayerStore.setState({
+      queue: [s1, s2],
+      currentIndex: 0,
+      isPlaying: true,
+      position: 0,
+      repeatMode: 'all',
+    })
+
+    usePlayerStore.getState().prev()
+
+    const state = usePlayerStore.getState()
+    expect(state.currentIndex).toBe(1)
+    expect(state.isPlaying).toBe(true)
+  })
+
+  it('tick ở giây cuối với chế độ lặp một bài quay lại 0:00', () => {
+    usePlayerStore.setState({
+      queue: [s1],
+      currentIndex: 0,
+      isPlaying: true,
+      position: s1.duration - 1,
+      repeatMode: 'one',
+    })
+
+    usePlayerStore.getState().tick()
+
+    const state = usePlayerStore.getState()
+    expect(state.currentIndex).toBe(0)
+    expect(state.position).toBe(0)
+    expect(state.isPlaying).toBe(true)
+  })
+
+  it('next khi bật phát ngẫu nhiên chọn bài khác bài hiện tại', () => {
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0)
+    usePlayerStore.setState({
+      queue: [s1, s2, s3],
+      currentIndex: 1,
+      isPlaying: true,
+      position: 10,
+      isShuffle: true,
+    })
+
+    usePlayerStore.getState().next()
+
+    const state = usePlayerStore.getState()
+    expect(state.currentIndex).toBe(0)
+    expect(state.isPlaying).toBe(true)
+    expect(state.position).toBe(0)
+    randomSpy.mockRestore()
+  })
+
+  it('toggleShuffle bật và tắt phát ngẫu nhiên', () => {
+    usePlayerStore.getState().toggleShuffle()
+    expect(usePlayerStore.getState().isShuffle).toBe(true)
+
+    usePlayerStore.getState().toggleShuffle()
+    expect(usePlayerStore.getState().isShuffle).toBe(false)
   })
 })

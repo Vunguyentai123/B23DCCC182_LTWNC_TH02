@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 
 export interface FavoritesState {
   ids: string[]
@@ -7,19 +7,22 @@ export interface FavoritesState {
 }
 
 export const useFavoritesStore = create<FavoritesState>()(
-  persist(
-    (set) => ({
-      ids: [],
-      toggle: (id) => {
-        set((state) => ({
-          ids: state.ids.includes(id)
-            ? state.ids.filter((favoriteId) => favoriteId !== id)
-            : [...state.ids, id],
-        }))
+  devtools(
+    persist(
+      (set) => ({
+        ids: [],
+        toggle: (id) => {
+          set((state) => ({
+            ids: state.ids.includes(id)
+              ? state.ids.filter((favoriteId) => favoriteId !== id)
+              : [...state.ids, id],
+          }))
+        },
+      }),
+      {
+        name: 'music-favorites',
       },
-    }),
-    {
-      name: 'music-favorites',
-    },
+    ),
+    { name: 'Favorites Store', enabled: import.meta.env.DEV },
   ),
 )

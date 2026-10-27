@@ -10,13 +10,24 @@ export default function PlayerBar() {
     (state) => state.queue[state.currentIndex],
   )
   const isPlaying = usePlayerStore((state) => state.isPlaying)
+  const isShuffle = usePlayerStore((state) => state.isShuffle)
+  const repeatMode = usePlayerStore((state) => state.repeatMode)
   const togglePlay = usePlayerStore((state) => state.togglePlay)
+  const toggleShuffle = usePlayerStore((state) => state.toggleShuffle)
+  const cycleRepeat = usePlayerStore((state) => state.cycleRepeat)
   const next = usePlayerStore((state) => state.next)
   const prev = usePlayerStore((state) => state.prev)
   const playAt = usePlayerStore((state) => state.playAt)
   const removeFromQueue = usePlayerStore((state) => state.removeFromQueue)
   const clearQueue = usePlayerStore((state) => state.clearQueue)
   const tick = usePlayerStore((state) => state.tick)
+
+  const repeatLabel =
+    repeatMode === 'off'
+      ? 'Bật lặp lại'
+      : repeatMode === 'all'
+        ? 'Lặp lại tất cả'
+        : 'Lặp lại một bài'
 
   useEffect(() => {
     if (!isPlaying) return
@@ -29,6 +40,36 @@ export default function PlayerBar() {
       window.clearInterval(intervalId)
     }
   }, [isPlaying, tick])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== 'Space' && event.key !== ' ') return
+      if (event.repeat) return
+
+      const target = event.target
+      if (target instanceof HTMLElement) {
+        const tagName = target.tagName
+        if (
+          tagName === 'INPUT' ||
+          tagName === 'TEXTAREA' ||
+          tagName === 'SELECT' ||
+          tagName === 'BUTTON' ||
+          tagName === 'A' ||
+          target.isContentEditable
+        ) {
+          return
+        }
+      }
+
+      event.preventDefault()
+      togglePlay()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [togglePlay])
 
   return (
     <aside className="player-bar" aria-label="Thanh phát nhạc">
@@ -44,6 +85,26 @@ export default function PlayerBar() {
       <ProgressBar />
 
       <div className="player-controls">
+        <button
+          type="button"
+          className={`icon-button player-mode${isShuffle ? ' is-active' : ''}`}
+          aria-label={isShuffle ? 'Tắt phát ngẫu nhiên' : 'Bật phát ngẫu nhiên'}
+          aria-pressed={isShuffle}
+          title="Phát ngẫu nhiên"
+          onClick={toggleShuffle}
+        >
+          ⇄
+        </button>
+        <button
+          type="button"
+          className={`icon-button player-mode${repeatMode !== 'off' ? ' is-active' : ''}`}
+          aria-label={repeatLabel}
+          aria-pressed={repeatMode !== 'off'}
+          title={repeatLabel}
+          onClick={cycleRepeat}
+        >
+          ↻{repeatMode === 'one' ? '1' : ''}
+        </button>
         <button type="button" className="button" onClick={prev}>
           Trước
         </button>

@@ -599,6 +599,19 @@ select:disabled {
   min-width: 88px;
 }
 
+.player-mode {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.player-mode.is-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
 .queue-count {
   margin: 0;
   color: var(--text-muted);

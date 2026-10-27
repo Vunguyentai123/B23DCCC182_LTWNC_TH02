@@ -157,4 +157,62 @@ describe('PlayerBar', () => {
       ),
     ).toBeInTheDocument()
   })
+
+  it('bật phát ngẫu nhiên và chuyển chế độ lặp lại', () => {
+    render(<PlayerBar />)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Bật phát ngẫu nhiên' }),
+    )
+    expect(usePlayerStore.getState().isShuffle).toBe(true)
+    expect(
+      screen.getByRole('button', { name: 'Tắt phát ngẫu nhiên' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bật lặp lại' }))
+    expect(usePlayerStore.getState().repeatMode).toBe('all')
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Lặp lại tất cả' }),
+    )
+    expect(usePlayerStore.getState().repeatMode).toBe('one')
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Lặp lại một bài' }),
+    )
+    expect(usePlayerStore.getState().repeatMode).toBe('off')
+  })
+
+  it('phím Space phát/tạm dừng và bỏ qua khi đang gõ trong ô nhập', () => {
+    render(<PlayerBar />)
+
+    act(() => {
+      usePlayerStore.getState().playQueue([s1], 0)
+    })
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+
+    fireEvent.keyDown(window, { code: 'Space', key: ' ' })
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+
+    fireEvent.keyDown(window, { code: 'Space', key: ' ' })
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+
+    const input = document.createElement('input')
+    document.body.append(input)
+    fireEvent.keyDown(input, { code: 'Space', key: ' ' })
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+    input.remove()
+  })
+
+  it('gỡ bỏ listener phím Space khi unmount', () => {
+    const { unmount } = render(<PlayerBar />)
+
+    act(() => {
+      usePlayerStore.getState().playQueue([s1], 0)
+    })
+    unmount()
+
+    fireEvent.keyDown(window, { code: 'Space', key: ' ' })
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+  })
 })

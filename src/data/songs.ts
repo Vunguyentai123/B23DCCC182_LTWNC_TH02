@@ -1,39 +1,44 @@
 import type { Genre, Song } from '../types'
 
-export const GENRES: Genre[] = ['Pop', 'Indie', 'Ballad', 'Rock', 'Rap']
-
-const TITLES = [
-  'Mưa tháng Sáu',
-  'Nắng tháng Sáu',
-  'Gió tháng Sáu',
-  'Biển bình yên',
-  'Phố mùa hạ',
-  'Đêm Hà Nội',
-  'Hoa trong vườn',
-  'Về nhà',
+const ADJ = ['Mưa', 'Nắng', 'Gió', 'Đêm', 'Phố', 'Biển', 'Mây', 'Sao']
+const NOUN = [
+  'tháng Sáu',
+  'cuối ngày',
+  'Hà Nội',
+  'mùa thu',
+  'xa xôi',
+  'bình yên',
+  'ngày cũ',
+  'lặng lẽ',
+  'trong tim',
+  'mùa hạ',
 ]
-
 const ARTISTS = [
   'Lê Minh',
-  'Quang Huy',
+  'Hà Anh',
+  'Tuấn Vũ',
+  'Ngọc Mai',
   'Bảo Trâm',
+  'Đức Phúc',
   'Thu Hà',
-  'Minh Anh',
-  'Hoàng Nam',
-  'Lan Phương',
-  'Đức Thịnh',
-  'Mai Chi',
-  'Tuấn Kiệt',
+  'Quang Huy',
+  'Mỹ Linh',
+  'Hoàng Long',
 ]
 
-export function generateSongs(count: number): Song[] {
-  return Array.from({ length: count }, (_, index) => ({
-    id: `s${index + 1}`,
-    title: `${TITLES[index % TITLES.length]} ${Math.floor(index / TITLES.length) + 1}`,
-    artist: ARTISTS[index % ARTISTS.length],
-    genre: GENRES[index % GENRES.length],
-    duration: 150 + ((index * 37) % 151),
-  }))
-}
+export const GENRES: Genre[] = ['Pop', 'Ballad', 'Rock', 'Indie', 'Rap']
+
+export const generateSongs = (count: number): Song[] =>
+  Array.from({ length: count }, (_, i) => {
+    const name = `${ADJ[i % 8]} ${NOUN[Math.floor(i / 8) % 10]}`
+
+    return {
+      id: `s${i + 1}`,
+      title: `${name} ${Math.floor(i / 80) + 1}`,
+      artist: ARTISTS[(i * 7) % 10],
+      genre: GENRES[(i * 3) % 5],
+      duration: 150 + ((i * 37) % 151),
+    }
+  })
 
 export const SONGS = generateSongs(10000)
