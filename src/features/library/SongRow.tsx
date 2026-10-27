@@ -1,11 +1,11 @@
 import {
   memo,
   useCallback,
-  useState,
   type CSSProperties,
 } from 'react'
 import type { Song } from '../../types'
 import { formatDuration } from '../../utils/format'
+import { useFavoritesStore } from '../favorites/useFavoritesStore'
 
 export interface SongRowProps {
   song: Song
@@ -13,6 +13,7 @@ export interface SongRowProps {
   style?: CSSProperties
   onPlay: (song: Song) => void
   onAddToQueue: (song: Song) => void
+  isCurrent?: boolean
 }
 
 export const SongRow = memo(function SongRow({
@@ -21,8 +22,10 @@ export const SongRow = memo(function SongRow({
   style,
   onPlay,
   onAddToQueue,
+  isCurrent = false,
 }: SongRowProps) {
-  const [isFavorite, setIsFavorite] = useState(false)
+  const isFavorite = useFavoritesStore((state) => state.ids.includes(song.id))
+  const toggleFavorite = useFavoritesStore((state) => state.toggle)
 
   const handlePlay = useCallback(() => {
     onPlay(song)
@@ -33,11 +36,14 @@ export const SongRow = memo(function SongRow({
   }, [onAddToQueue, song])
 
   const handleToggleFavorite = useCallback(() => {
-    setIsFavorite((favorite) => !favorite)
-  }, [])
+    toggleFavorite(song.id)
+  }, [song.id, toggleFavorite])
 
   return (
-    <div className="song-row" style={style}>
+    <div
+      className={`song-row${isCurrent ? ' is-current' : ''}`}
+      style={style}
+    >
       <span className="song-index">{index + 1}</span>
       <span className="song-title" title={song.title}>
         {song.title}

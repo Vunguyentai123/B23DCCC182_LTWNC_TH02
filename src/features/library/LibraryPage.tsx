@@ -9,6 +9,7 @@ import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 import { SONGS } from '../../data/songs'
 import { useDebounce } from '../../hooks/useDebounce'
 import type { Genre, Song } from '../../types'
+import { usePlayerStore } from '../player/usePlayerStore'
 import { SongRow } from './SongRow'
 
 type GenreFilter = 'all' | Genre
@@ -20,6 +21,7 @@ interface SongListData {
   songs: Song[]
   onPlay: (song: Song) => void
   onAddToQueue: (song: Song) => void
+  currentSongId: string | undefined
 }
 
 function SongListRow({
@@ -37,6 +39,7 @@ function SongListRow({
       style={style}
       onPlay={data.onPlay}
       onAddToQueue={data.onAddToQueue}
+      isCurrent={data.currentSongId === song.id}
     />
   )
 }
@@ -45,16 +48,18 @@ interface SongListProps {
   songs: Song[]
   onPlay: (song: Song) => void
   onAddToQueue: (song: Song) => void
+  currentSongId: string | undefined
 }
 
 const SongList = memo(function SongList({
   songs,
   onPlay,
   onAddToQueue,
+  currentSongId,
 }: SongListProps) {
   const itemData = useMemo<SongListData>(
-    () => ({ songs, onPlay, onAddToQueue }),
-    [onAddToQueue, onPlay, songs],
+    () => ({ songs, onPlay, onAddToQueue, currentSongId }),
+    [currentSongId, onAddToQueue, onPlay, songs],
   )
 
   const getItemKey = useCallback(
@@ -83,6 +88,12 @@ export default function LibraryPage() {
   const [genre, setGenre] = useState<GenreFilter>('all')
   const [sortMode, setSortMode] = useState<SortMode>('default')
   const debouncedQuery = useDebounce(query, 300)
+
+  const playQueue = usePlayerStore((state) => state.playQueue)
+  const addToQueue = usePlayerStore((state) => state.addToQueue)
+  const currentSongId = usePlayerStore(
+    (state) => state.queue[state.currentIndex]?.id,
+  )
 
   const handleQueryShift = (event: ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value)
@@ -118,13 +129,13 @@ export default function LibraryPage() {
     return filtered
   }, [debouncedQuery, genre, sortMode])
 
-  const handlePlay = useCallback(() => {
-    // Trình phát nhạc sẽ được nối vào ở Phần 2.
-  }, [])
-
-  const handleAddToQueue = useCallback(() => {
-    // Hàng đợi sẽ được nối vào ở Phần 2.
-  }, [])
+  const handlePlay = useCallback(
+    (song: Song) => {
+      const startIndex = visibleSongs.findIndex((item) => item.id === song.id)
+      playQueue(visibleSongs, Math.max(0, startIndex))
+    },
+    [playQueue, visibleSongs],
+  )
 
   return (
     <section className="page library-page">
@@ -193,7 +204,8 @@ export default function LibraryPage() {
         <SongList
           songs={visibleSongs}
           onPlay={handlePlay}
-          onAddToQueue={handleAddToQueue}
+          onAddToQueue={addToQueue}
+          currentSongId={currentSongId}
         />
       )}
     </section>

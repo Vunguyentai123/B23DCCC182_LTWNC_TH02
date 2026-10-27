@@ -1,6 +1,8 @@
 const BUILD_TAG = "mz-4073";
 import { NavLink, Route, Routes } from 'react-router-dom'
+import FavoritesPage from './features/favorites/FavoritesPage'
 import LibraryPage from './features/library/LibraryPage'
+import PlayerBar from './features/player/PlayerBar'
 import './App.css'
 
 interface PlaceholderPageProps {
@@ -66,15 +68,7 @@ function App() {
       <main className="app-main">
         <Routes>
           <Route path="/" element={<LibraryPage />} />
-          <Route
-            path="/favorites"
-            element={
-              <PlaceholderPage
-                title="Bài hát yêu thích"
-                description="Danh sách bài hát bạn đã yêu thích."
-              />
-            }
-          />
+          <Route path="/favorites" element={<FavoritesPage />} />
           <Route
             path="/playlists"
             element={
@@ -96,6 +90,7 @@ function App() {
           <Route path="*" element={<p>Không tìm thấy trang</p>} />
         </Routes>
       </main>
+      <PlayerBar />
     </div>
   )
 }
