@@ -1,0 +1,79 @@
+import {
+  memo,
+  useCallback,
+  useState,
+  type CSSProperties,
+} from 'react'
+import type { Song } from '../../types'
+import { formatDuration } from '../../utils/format'
+
+export interface SongRowProps {
+  song: Song
+  index: number
+  style?: CSSProperties
+  onPlay: (song: Song) => void
+  onAddToQueue: (song: Song) => void
+}
+
+export const SongRow = memo(function SongRow({
+  song,
+  index,
+  style,
+  onPlay,
+  onAddToQueue,
+}: SongRowProps) {
+  const [isFavorite, setIsFavorite] = useState(false)
+
+  const handlePlay = useCallback(() => {
+    onPlay(song)
+  }, [onPlay, song])
+
+  const handleAddToQueue = useCallback(() => {
+    onAddToQueue(song)
+  }, [onAddToQueue, song])
+
+  const handleToggleFavorite = useCallback(() => {
+    setIsFavorite((favorite) => !favorite)
+  }, [])
+
+  return (
+    <div className="song-row" style={style}>
+      <span className="song-index">{index + 1}</span>
+      <span className="song-title" title={song.title}>
+        {song.title}
+      </span>
+      <span className="song-artist" title={song.artist}>
+        {song.artist}
+      </span>
+      <span className="song-genre">{song.genre}</span>
+      <span className="song-duration">{formatDuration(song.duration)}</span>
+      <span className="song-actions">
+        <button
+          type="button"
+          className="button button-primary button-small"
+          onClick={handlePlay}
+        >
+          Phát
+        </button>
+        <button
+          type="button"
+          className={`icon-button favorite-button${isFavorite ? ' is-active' : ''}`}
+          aria-label={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+          aria-pressed={isFavorite}
+          onClick={handleToggleFavorite}
+        >
+          {isFavorite ? '♥' : '♡'}
+        </button>
+        <button
+          type="button"
+          className="button button-small"
+          onClick={handleAddToQueue}
+        >
+          + Hàng đợi
+        </button>
+      </span>
+    </div>
+  )
+})
+
+export default SongRow
