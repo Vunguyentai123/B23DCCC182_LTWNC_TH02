@@ -2,6 +2,7 @@ import {
   memo,
   useCallback,
   type CSSProperties,
+  type MouseEvent,
 } from 'react'
 import type { Song } from '../../types'
 import { formatDuration } from '../../utils/format'
@@ -13,6 +14,8 @@ export interface SongRowProps {
   style?: CSSProperties
   onPlay: (song: Song) => void
   onAddToQueue: (song: Song) => void
+  onAddToPlaylist?: (song: Song) => void
+  showPlaylistButton?: boolean
   isCurrent?: boolean
 }
 
@@ -22,6 +25,8 @@ export const SongRow = memo(function SongRow({
   style,
   onPlay,
   onAddToQueue,
+  onAddToPlaylist,
+  showPlaylistButton = true,
   isCurrent = false,
 }: SongRowProps) {
   const isFavorite = useFavoritesStore((state) => state.ids.includes(song.id))
@@ -34,6 +39,14 @@ export const SongRow = memo(function SongRow({
   const handleAddToQueue = useCallback(() => {
     onAddToQueue(song)
   }, [onAddToQueue, song])
+
+  const handleAddToPlaylist = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation()
+      onAddToPlaylist?.(song)
+    },
+    [onAddToPlaylist, song],
+  )
 
   const handleToggleFavorite = useCallback(() => {
     toggleFavorite(song.id)
@@ -77,6 +90,16 @@ export const SongRow = memo(function SongRow({
         >
           + Hàng đợi
         </button>
+        {showPlaylistButton ? (
+          <button
+            type="button"
+            className="button button-small"
+            onClick={handleAddToPlaylist}
+            disabled={!onAddToPlaylist}
+          >
+            + Playlist
+          </button>
+        ) : null}
       </span>
     </div>
   )

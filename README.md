@@ -36,3 +36,15 @@ npm run build
 - Yêu thích/bỏ yêu thích bằng nút tim, lưu vào `localStorage` với khóa `music-favorites`.
 - Trang Yêu thích hiển thị danh sách đã lưu, cho phép phát từng bài hoặc phát tất cả.
 - Bài đang phát được làm nổi bật trong thư viện và trang yêu thích.
+
+## Phần 3 đã hoàn thiện
+
+- Playlist quản lý bằng `useReducer` + 2 Context (`PlaylistStateContext`, `PlaylistDispatchContext`).
+- Reducer thuần trong `playlistReducer.ts` với các action `create`, `rename`, `remove`, `addSong`, `removeSong`; thêm bài trùng sẽ bị bỏ qua.
+- Middleware `withLogger` ghi log tên action, state trước và sau trong môi trường dev.
+- Playlist được lưu vào `localStorage` với khóa `music-playlists`.
+- Trang `/playlists`: tạo playlist, kiểm tra tên trống/trùng, xem chi tiết và xóa.
+- Thư viện có ô chọn **Playlist đang chọn** và nút **+ Playlist** trên từng bài hát.
+- Trang `/playlists/:id`: danh sách bài, bỏ bài, tổng thời lượng và **Phát tất cả**.
+- Giao diện sáng/tối bằng `ThemeContext`, lưu lựa chọn trong `localStorage`.
+- Các trang Yêu thích, Playlist và chi tiết Playlist được lazy-load theo route.

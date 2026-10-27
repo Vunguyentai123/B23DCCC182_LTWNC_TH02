@@ -65,6 +65,7 @@ export default function FavoritesPage() {
               index={index}
               onPlay={handlePlay}
               onAddToQueue={addToQueue}
+              showPlaylistButton={false}
               isCurrent={currentSongId === song.id}
             />
           ))}

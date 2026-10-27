@@ -243,7 +243,7 @@ select:disabled {
 
 .filter-panel {
   display: grid;
-  grid-template-columns: minmax(230px, 1.7fr) repeat(2, minmax(135px, 0.65fr));
+  grid-template-columns: minmax(230px, 1.7fr) repeat(2, minmax(135px, 0.65fr)) minmax(185px, 0.85fr);
   gap: 14px;
   padding: 18px;
   background: var(--surface);

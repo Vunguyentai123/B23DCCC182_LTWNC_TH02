@@ -1,5 +1,6 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { renderWithProviders } from '../../test/renderWithProviders'
 import { useFavoritesStore } from '../favorites/useFavoritesStore'
 import { initialPlayerState, usePlayerStore } from '../player/usePlayerStore'
 import LibraryPage from './LibraryPage'
@@ -22,7 +23,7 @@ describe('LibraryPage', () => {
   })
 
   it('hiển thị 10000 bài nhưng chỉ render một số dòng', () => {
-    render(<LibraryPage />)
+    renderWithProviders(<LibraryPage />)
 
     expect(screen.getByText('Tìm thấy 10000 bài hát')).toBeInTheDocument()
     const renderedRows = document.querySelectorAll('.song-row')
@@ -32,7 +33,7 @@ describe('LibraryPage', () => {
 
   it('chỉ lọc sau khi ngừng gõ 300ms và kết hợp với thể loại', () => {
     vi.useFakeTimers()
-    render(<LibraryPage />)
+    renderWithProviders(<LibraryPage />)
 
     typeSearch('mưa')
     act(() => {
@@ -53,7 +54,7 @@ describe('LibraryPage', () => {
 
   it('phát đúng danh sách đang hiển thị sau khi lọc', () => {
     vi.useFakeTimers()
-    render(<LibraryPage />)
+    renderWithProviders(<LibraryPage />)
 
     typeSearch('mưa')
     act(() => {
@@ -80,7 +81,7 @@ describe('LibraryPage', () => {
   })
 
   it('thêm bài hát vào hàng đợi từ danh sách', () => {
-    render(<LibraryPage />)
+    renderWithProviders(<LibraryPage />)
 
     const row = screen.getByText('Mưa tháng Sáu 1').closest('.song-row')
     expect(row).not.toBeNull()
@@ -93,5 +94,37 @@ describe('LibraryPage', () => {
     const state = usePlayerStore.getState()
     expect(state.queue.map((song) => song.id)).toEqual(['s1'])
     expect(state.currentIndex).toBe(-1)
+  })
+
+  it('khóa nút + Playlist khi chưa có playlist', () => {
+    renderWithProviders(<LibraryPage />)
+
+    expect(screen.getByLabelText('Playlist đang chọn')).toBeDisabled()
+
+    const row = screen.getByText('Mưa tháng Sáu 1').closest('.song-row')
+    expect(row).not.toBeNull()
+    expect(
+      within(row as HTMLElement).getByRole('button', { name: '+ Playlist' }),
+    ).toBeDisabled()
+  })
+
+  it('thêm bài hát vào playlist đang chọn', async () => {
+    window.localStorage.setItem(
+      'music-playlists',
+      JSON.stringify([{ id: 'p1', name: 'Chạy bộ', songIds: [] }]),
+    )
+    renderWithProviders(<LibraryPage />)
+
+    expect(screen.getByLabelText('Playlist đang chọn')).toHaveValue('p1')
+
+    const row = screen.getByText('Mưa tháng Sáu 1').closest('.song-row')
+    expect(row).not.toBeNull()
+    fireEvent.click(
+      within(row as HTMLElement).getByRole('button', { name: '+ Playlist' }),
+    )
+
+    await waitFor(() => {
+      expect(window.localStorage.getItem('music-playlists')).toContain('"s1"')
+    })
   })
 })

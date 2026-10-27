@@ -10,6 +10,7 @@ const song = SONGS[0]
 function renderSongRow() {
   const onPlay = vi.fn()
   const onAddToQueue = vi.fn()
+  const onAddToPlaylist = vi.fn()
 
   render(
     <SongRow
@@ -17,10 +18,11 @@ function renderSongRow() {
       index={0}
       onPlay={onPlay}
       onAddToQueue={onAddToQueue}
+      onAddToPlaylist={onAddToPlaylist}
     />,
   )
 
-  return { onPlay, onAddToQueue }
+  return { onPlay, onAddToQueue, onAddToPlaylist }
 }
 
 describe('SongRow', () => {
@@ -48,13 +50,15 @@ describe('SongRow', () => {
     expect(onPlay).toHaveBeenCalledWith(song)
   })
 
-  it('gọi callback thêm vào hàng đợi', async () => {
+  it('gọi callback thêm vào hàng đợi và playlist', async () => {
     const user = userEvent.setup()
-    const { onAddToQueue } = renderSongRow()
+    const { onAddToQueue, onAddToPlaylist } = renderSongRow()
 
     await user.click(screen.getByRole('button', { name: '+ Hàng đợi' }))
+    await user.click(screen.getByRole('button', { name: '+ Playlist' }))
 
     expect(onAddToQueue).toHaveBeenCalledWith(song)
+    expect(onAddToPlaylist).toHaveBeenCalledWith(song)
   })
 
   it('đổi trạng thái yêu thích và aria-label của nút tim', async () => {

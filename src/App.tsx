@@ -1,29 +1,23 @@
 const BUILD_TAG = "mz-4073";
+import { lazy, Suspense } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
-import FavoritesPage from './features/favorites/FavoritesPage'
+import { useTheme } from './contexts/ThemeContext'
 import LibraryPage from './features/library/LibraryPage'
 import PlayerBar from './features/player/PlayerBar'
+import { PlaylistProvider } from './features/playlists/PlaylistContext'
 import './App.css'
 
-interface PlaceholderPageProps {
-  title: string
-  description: string
-}
-
-function PlaceholderPage({ title, description }: PlaceholderPageProps) {
-  return (
-    <section className="page">
-      <header className="page-heading">
-        <p className="eyebrow">TH02</p>
-        <h1>{title}</h1>
-        <p className="page-description">{description}</p>
-      </header>
-      <p className="empty-state">Chức năng này sẽ được hoàn thiện ở phần tiếp theo.</p>
-    </section>
-  )
-}
+const LazyFavoritesPage = lazy(() => import('./features/favorites/FavoritesPage'))
+const LazyPlaylistsPage = lazy(
+  () => import('./features/playlists/PlaylistsPage'),
+)
+const LazyPlaylistDetailPage = lazy(
+  () => import('./features/playlists/PlaylistDetailPage'),
+)
 
 function Navigation() {
+  const { theme, toggleTheme } = useTheme()
+
   return (
     <header className="app-header">
       <div className="brand">
@@ -57,41 +51,40 @@ function Navigation() {
           Playlist
         </NavLink>
       </nav>
+
+      <button
+        type="button"
+        className="button theme-toggle"
+        onClick={toggleTheme}
+      >
+        {theme === 'light' ? 'Giao diện tối' : 'Giao diện sáng'}
+      </button>
     </header>
   )
 }
 
 function App() {
   return (
-    <div className="app-shell" data-build-tag={BUILD_TAG}>
-      <Navigation />
-      <main className="app-main">
-        <Routes>
-          <Route path="/" element={<LibraryPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          <Route
-            path="/playlists"
-            element={
-              <PlaceholderPage
-                title="Playlist"
-                description="Quản lý các danh sách phát của bạn."
+    <PlaylistProvider>
+      <div className="app-shell" data-build-tag={BUILD_TAG}>
+        <Navigation />
+        <main className="app-main">
+          <Suspense fallback={<p>Đang tải trang...</p>}>
+            <Routes>
+              <Route path="/" element={<LibraryPage />} />
+              <Route path="/favorites" element={<LazyFavoritesPage />} />
+              <Route path="/playlists" element={<LazyPlaylistsPage />} />
+              <Route
+                path="/playlists/:id"
+                element={<LazyPlaylistDetailPage />}
               />
-            }
-          />
-          <Route
-            path="/playlists/:id"
-            element={
-              <PlaceholderPage
-                title="Chi tiết playlist"
-                description="Các bài hát trong playlist đã chọn."
-              />
-            }
-          />
-          <Route path="*" element={<p>Không tìm thấy trang</p>} />
-        </Routes>
-      </main>
-      <PlayerBar />
-    </div>
+              <Route path="*" element={<p>Không tìm thấy trang</p>} />
+            </Routes>
+          </Suspense>
+        </main>
+        <PlayerBar />
+      </div>
+    </PlaylistProvider>
   )
 }
 

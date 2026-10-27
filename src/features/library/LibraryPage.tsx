@@ -9,6 +9,7 @@ import { FixedSizeList, type ListChildComponentProps } from 'react-window'
 import { SONGS } from '../../data/songs'
 import { useDebounce } from '../../hooks/useDebounce'
 import type { Genre, Song } from '../../types'
+import { usePlaylistDispatch, usePlaylists } from '../playlists/PlaylistContext'
 import { usePlayerStore } from '../player/usePlayerStore'
 import { SongRow } from './SongRow'
 
@@ -21,7 +22,9 @@ interface SongListData {
   songs: Song[]
   onPlay: (song: Song) => void
   onAddToQueue: (song: Song) => void
+  onAddToPlaylist: (song: Song) => void
   currentSongId: string | undefined
+  canAddToPlaylist: boolean
 }
 
 function SongListRow({
@@ -39,6 +42,9 @@ function SongListRow({
       style={style}
       onPlay={data.onPlay}
       onAddToQueue={data.onAddToQueue}
+      onAddToPlaylist={
+        data.canAddToPlaylist ? data.onAddToPlaylist : undefined
+      }
       isCurrent={data.currentSongId === song.id}
     />
   )
@@ -48,18 +54,36 @@ interface SongListProps {
   songs: Song[]
   onPlay: (song: Song) => void
   onAddToQueue: (song: Song) => void
+  onAddToPlaylist: (song: Song) => void
   currentSongId: string | undefined
+  canAddToPlaylist: boolean
 }
 
 const SongList = memo(function SongList({
   songs,
   onPlay,
   onAddToQueue,
+  onAddToPlaylist,
   currentSongId,
+  canAddToPlaylist,
 }: SongListProps) {
   const itemData = useMemo<SongListData>(
-    () => ({ songs, onPlay, onAddToQueue, currentSongId }),
-    [currentSongId, onAddToQueue, onPlay, songs],
+    () => ({
+      songs,
+      onPlay,
+      onAddToQueue,
+      onAddToPlaylist,
+      currentSongId,
+      canAddToPlaylist,
+    }),
+    [
+      canAddToPlaylist,
+      currentSongId,
+      onAddToPlaylist,
+      onAddToQueue,
+      onPlay,
+      songs,
+    ],
   )
 
   const getItemKey = useCallback(
@@ -87,13 +111,21 @@ export default function LibraryPage() {
   const [query, setQuery] = useState('')
   const [genre, setGenre] = useState<GenreFilter>('all')
   const [sortMode, setSortMode] = useState<SortMode>('default')
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState('')
   const debouncedQuery = useDebounce(query, 300)
 
+  const playlists = usePlaylists()
+  const dispatchPlaylist = usePlaylistDispatch()
   const playQueue = usePlayerStore((state) => state.playQueue)
   const addToQueue = usePlayerStore((state) => state.addToQueue)
   const currentSongId = usePlayerStore(
     (state) => state.queue[state.currentIndex]?.id,
   )
+
+  const selectedPlaylist =
+    playlists.find((playlist) => playlist.id === selectedPlaylistId) ??
+    playlists[0]
+  const activePlaylistId = selectedPlaylist?.id ?? ''
 
   const handleQueryShift = (event: ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value)
@@ -105,6 +137,10 @@ export default function LibraryPage() {
 
   const handleSortChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setSortMode(event.target.value as SortMode)
+  }
+
+  const handlePlaylistChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPlaylistId(event.target.value)
   }
 
   const visibleSongs = useMemo(() => {
@@ -135,6 +171,17 @@ export default function LibraryPage() {
       playQueue(visibleSongs, Math.max(0, startIndex))
     },
     [playQueue, visibleSongs],
+  )
+
+  const handleAddToPlaylist = useCallback(
+    (song: Song) => {
+      if (!activePlaylistId) return
+      dispatchPlaylist({
+        type: 'addSong',
+        payload: { playlistId: activePlaylistId, songId: song.id },
+      })
+    },
+    [activePlaylistId, dispatchPlaylist],
   )
 
   return (
@@ -181,12 +228,39 @@ export default function LibraryPage() {
             <option value="duration">Thời lượng tăng dần</option>
           </select>
         </div>
+
+        <div className="field field-playlist">
+          <label htmlFor="playlist-target">Playlist đang chọn</label>
+          <select
+            id="playlist-target"
+            value={activePlaylistId}
+            onChange={handlePlaylistChange}
+            disabled={playlists.length === 0}
+          >
+            {playlists.length === 0 ? (
+              <option value="">Chưa có playlist</option>
+            ) : (
+              playlists.map((playlist) => (
+                <option key={playlist.id} value={playlist.id}>
+                  {playlist.name}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
       </div>
 
       <div className="library-meta">
         <p className="result-count" aria-live="polite">
           Tìm thấy {visibleSongs.length} bài hát
         </p>
+        {selectedPlaylist ? (
+          <p className="hint">
+            Thêm bài vào: <strong>{selectedPlaylist.name}</strong>
+          </p>
+        ) : (
+          <p className="hint">Tạo playlist để thêm bài hát vào bộ sưu tập.</p>
+        )}
       </div>
 
       <div className="song-columns" aria-hidden="true">
@@ -205,7 +279,9 @@ export default function LibraryPage() {
           songs={visibleSongs}
           onPlay={handlePlay}
           onAddToQueue={addToQueue}
+          onAddToPlaylist={handleAddToPlaylist}
           currentSongId={currentSongId}
+          canAddToPlaylist={activePlaylistId !== ''}
         />
       )}
     </section>
